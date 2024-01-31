@@ -1,14 +1,22 @@
 import { db } from "@/app/_lib/prisma";
-import { BarberShopInfo } from "./_components/barbershop-info";
-import { ServiceItem } from "./_components/service-item";
+import BarbershopInfo from "./_components/barbershop-info";
+import ServiceItem from "./_components/service-item";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-interface BarberShopDetailsPageProps {
-  params?: any;
+interface BarbershopDetailsPageProps {
+  params: {
+    id?: string;
+  };
 }
 
-async function BarberShopDetailsPage({ params }: BarberShopDetailsPageProps) {
-  if(!params.id) {
+const BarbershopDetailsPage = async ({
+  params,
+}: BarbershopDetailsPageProps) => {
+  const session = await getServerSession(authOptions);
 
+  if (!params.id) {
+    // TODO: redirecionar para home page
     return null;
   }
 
@@ -17,25 +25,30 @@ async function BarberShopDetailsPage({ params }: BarberShopDetailsPageProps) {
       id: params.id,
     },
     include: {
-      services: true
-    }
-  })
+      services: true,
+    },
+  });
 
-  if(!barbershop) {
+  if (!barbershop) {
+    // TODO: redirecionar para home page
     return null;
   }
 
   return (
     <div>
-      <BarberShopInfo barbershop={barbershop} />
+      <BarbershopInfo barbershop={barbershop} />
 
       <div className="px-5 flex flex-col gap-4 py-6">
         {barbershop.services.map((service) => (
-          <ServiceItem key={service.id} service={service} />
+          <ServiceItem
+            key={service.id}
+            service={service}
+            isAuthenticated={!!session?.user}
+          />
         ))}
       </div>
     </div>
   );
-}
+};
 
-export default BarberShopDetailsPage;
+export default BarbershopDetailsPage;
